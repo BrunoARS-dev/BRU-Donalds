@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id             String         @id @default(uuid())
+  name           String
+  slug           String
+  description    String
+  avatarImageUrl String
+  coverImageUrl  String
+  createAt       DateTime       @default(now())
+  updateAt       DateTime       @updatedAt
+  menuCategories MenuCategory[]
+  order          Order[]
+  products       Product[]
+}
+
+model MenuCategory {
+  id           String     @id @default(uuid())
+  name         String
+  restaurantId String
+  createAt     DateTime   @default(now())
+  updateAt     DateTime   @updatedAt
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  products     Product[]
+}
+
+model Product {
+  id             String         @id @default(uuid())
+  name           String
+  description    String
+  price          Float
+  ImageUrl       String
+  ingredients    String[]
+  restaurantId   String
+  menuCategoryId String
+  createAt       DateTime       @default(now())
+  updateAt       DateTime       @updatedAt
+  orderProducts  OrderProduct[]
+  menuCategory   MenuCategory   @relation(fields: [menuCategoryId], references: [id])
+  restaurant     Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id                Int               @id @default(autoincrement())
+  total             Float
+  restaurantId      String
+  status            OrderStatus
+  consumptionMethod ConsumptionMethod
+  restaurant        Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  orderProducts     OrderProduct[]
+}
+
+model OrderProduct {
+  id        String   @id @default(uuid())
+  productId String
+  orderId   Int
+  quantity  Int
+  price     Float
+  createAt  DateTime @default(now())
+  updateAt  DateTime @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PREPARATION
+  FINISHED
+}
+
+enum ConsumptionMethod {
+  TAKEAWAY
+  DINE_IN
+}
